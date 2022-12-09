@@ -1,4 +1,5 @@
 import { Grid, Typography } from "@material-ui/core";
+import Home from "./Home";
 
 const Welcome = (props) => {
   return (

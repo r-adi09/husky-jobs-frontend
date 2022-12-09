@@ -23,6 +23,7 @@ import axios from "axios";
 import FilterListIcon from "@material-ui/icons/FilterList";
 import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
+import { useHistory } from "react-router-dom";
 
 import { SetPopupContext } from "../../App";
 
@@ -45,6 +46,10 @@ const useStyles = makeStyles((theme) => ({
     margin: "20px 0",
     boxSizing: "border-box",
     width: "100%",
+    "&:hover": {
+      border: "2px solid",
+      cursor: "pointer",
+    },
   },
   popupDialog: {
     height: "100%",
@@ -342,11 +347,16 @@ const ApplicationTile = (props) => {
   const { application, getData } = props;
   const setPopup = useContext(SetPopupContext);
   const [open, setOpen] = useState(false);
+  const history = useHistory();
 
   const appliedOn = new Date(application.dateOfApplication);
 
   const handleClose = () => {
     setOpen(false);
+  };
+
+  const handleCardClick = () => {
+    history.push(`/profile/${application.jobApplicant.userId}`);
   };
 
   const colorSet = {
@@ -542,7 +552,11 @@ const ApplicationTile = (props) => {
   };
 
   return (
-    <Paper className={classes.jobTileOuter} elevation={3}>
+    <Paper
+      className={classes.jobTileOuter}
+      elevation={3}
+      onClick={handleCardClick}
+    >
       <Grid container>
         <Grid
           item
@@ -600,7 +614,10 @@ const ApplicationTile = (props) => {
               variant="contained"
               className={classes.statusBlock}
               color="primary"
-              onClick={() => getResume()}
+              onClick={(e) => {
+                e.stopPropagation();
+                getResume();
+              }}
             >
               Download Resume
             </Button>
@@ -753,7 +770,7 @@ const JobApplications = (props) => {
         >
           {applications.length > 0 ? (
             applications.map((obj) => (
-              <Grid item>
+              <Grid key={obj._id} item>
                 {/* {console.log(obj)} */}
                 <ApplicationTile application={obj} getData={getData} />
               </Grid>

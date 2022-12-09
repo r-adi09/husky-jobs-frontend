@@ -794,7 +794,7 @@ const AcceptedApplicants = (props) => {
         >
           {applications.length > 0 ? (
             applications.map((obj) => (
-              <Grid item>
+              <Grid key={obj._id} item>
                 {/* {console.log(obj)} */}
                 <ApplicationTile application={obj} getData={getData} />
               </Grid>

@@ -136,7 +136,9 @@ const ApplicationTile = (props) => {
           <Grid item>
             <Typography variant="h5">{application.job.title}</Typography>
           </Grid>
-          <Grid item>Posted By: {application.recruiter.name}</Grid>
+          <Grid item>
+            Posted By: {application.recruiter?.name || "Anonymous"}
+          </Grid>
           <Grid item>Role : {application.job.jobType}</Grid>
           <Grid item>Salary : &#8377; {application.job.salary} per month</Grid>
           <Grid item>
@@ -272,7 +274,7 @@ const Applications = (props) => {
       >
         {applications.length > 0 ? (
           applications.map((obj) => (
-            <Grid item>
+            <Grid key={obj._id} item>
               <ApplicationTile application={obj} />
             </Grid>
           ))

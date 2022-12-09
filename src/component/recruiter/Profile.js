@@ -11,10 +11,12 @@ import {
 import axios from "axios";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/material.css";
+import { Redirect } from "react-router-dom";
 
 import { SetPopupContext } from "../../App";
 
 import apiList from "../../lib/apiList";
+import isAuth from "../../lib/isAuth";
 
 const useStyles = makeStyles((theme) => ({
   body: {
@@ -32,6 +34,7 @@ const useStyles = makeStyles((theme) => ({
 const Profile = (props) => {
   const classes = useStyles();
   const setPopup = useContext(SetPopupContext);
+  const [loggedin, setLoggedin] = useState(isAuth());
 
   const [profileDetails, setProfileDetails] = useState({
     name: "",
@@ -114,7 +117,9 @@ const Profile = (props) => {
       });
   };
 
-  return (
+  return !loggedin ? (
+    <Redirect to="/login" />
+  ) : (
     <>
       <Grid
         container

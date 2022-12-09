@@ -23,11 +23,14 @@ import SearchIcon from "@material-ui/icons/Search";
 import FilterListIcon from "@material-ui/icons/FilterList";
 import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
+import { useHistory, useParams } from "react-router-dom";
+import isAuth from "../lib/isAuth";
 
 import { SetPopupContext } from "../App";
 
 import apiList from "../lib/apiList";
 import { userType } from "../lib/isAuth";
+import Search from "@material-ui/icons/Search";
 
 const useStyles = makeStyles((theme) => ({
   body: {
@@ -42,6 +45,10 @@ const useStyles = makeStyles((theme) => ({
     margin: "20px 0",
     boxSizing: "border-box",
     width: "100%",
+    "&:hover": {
+      border: "2px solid",
+      cursor: "pointer",
+    },
   },
   popupDialog: {
     height: "100%",
@@ -58,15 +65,18 @@ const JobTile = (props) => {
 
   const [open, setOpen] = useState(false);
   const [sop, setSop] = useState("");
+  const history = useHistory();
+  const [loggedin, setLoggedin] = useState(isAuth());
 
-  const handleClose = () => {
+  const handleClose = (e) => {
+    if (e) {
+      e.stopPropagation();
+    }
     setOpen(false);
     setSop("");
   };
 
   const handleApply = () => {
-    console.log(job._id);
-    console.log(sop);
     axios
       .post(
         `${apiList.jobs}/${job._id}/applications`,
@@ -100,8 +110,16 @@ const JobTile = (props) => {
 
   const deadline = new Date(job.deadline).toLocaleDateString();
 
+  const handleJobClick = (job) => {
+    history.push(`/job/${job._id}`);
+  };
+
   return (
-    <Paper className={classes.jobTileOuter} elevation={3}>
+    <Paper
+      className={classes.jobTileOuter}
+      elevation={3}
+      onClick={() => handleJobClick(job)}
+    >
       <Grid container>
         <Grid container item xs={9} spacing={1} direction="column">
           <Grid item>
@@ -132,8 +150,13 @@ const JobTile = (props) => {
             variant="contained"
             color="primary"
             className={classes.button}
-            onClick={() => {
-              setOpen(true);
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!loggedin) {
+                history.push("/login");
+              } else {
+                setOpen(true);
+              }
             }}
             disabled={userType() === "recruiter"}
           >
@@ -141,7 +164,11 @@ const JobTile = (props) => {
           </Button>
         </Grid>
       </Grid>
-      <Modal open={open} onClose={handleClose} className={classes.popupDialog}>
+      <Modal
+        open={open}
+        onClose={(e) => handleClose(e)}
+        className={classes.popupDialog}
+      >
         <Paper
           style={{
             padding: "20px",
@@ -518,8 +545,11 @@ const FilterPopup = (props) => {
 const Home = (props) => {
   const [jobs, setJobs] = useState([]);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [loggedin, setLoggedin] = useState(isAuth());
+  const { keyword } = useParams();
+  const history = useHistory();
   const [searchOptions, setSearchOptions] = useState({
-    query: "",
+    query: keyword || "",
     jobType: {
       fullTime: false,
       partTime: false,
@@ -593,7 +623,6 @@ const Home = (props) => {
     });
     searchParams = [...searchParams, ...asc, ...desc];
     const queryString = searchParams.join("&");
-    console.log(queryString);
     let address = apiList.jobs;
     if (queryString !== "") {
       address = `${address}?${queryString}`;
@@ -606,7 +635,6 @@ const Home = (props) => {
         },
       })
       .then((response) => {
-        console.log(response.data);
         setJobs(
           response.data.filter((obj) => {
             const today = new Date();
@@ -642,7 +670,13 @@ const Home = (props) => {
           alignItems="center"
         >
           <Grid item xs>
-            <Typography variant="h2">Jobs</Typography>
+            {window.location.pathname?.includes("search") ? (
+              <Typography variant="h2">Search</Typography>
+            ) : loggedin && window.location.pathname === "/" ? (
+              <Typography variant="h2">Based on recent search</Typography>
+            ) : (
+              <Typography variant="h2">All Jobs</Typography>
+            )}
           </Grid>
           <Grid item xs>
             <TextField
@@ -656,6 +690,7 @@ const Home = (props) => {
               }
               onKeyPress={(ev) => {
                 if (ev.key === "Enter") {
+                  history.push(`/search/${searchOptions.query}`);
                   getData();
                 }
               }}
@@ -689,7 +724,7 @@ const Home = (props) => {
         >
           {jobs.length > 0 ? (
             jobs.map((job) => {
-              return <JobTile job={job} />;
+              return <JobTile key={job._id} job={job} />;
             })
           ) : (
             <Typography variant="h5" style={{ textAlign: "center" }}>

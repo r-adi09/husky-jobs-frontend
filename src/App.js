@@ -16,7 +16,9 @@ import JobApplications from "./component/recruiter/JobApplications";
 import AcceptedApplicants from "./component/recruiter/AcceptedApplicants";
 import RecruiterProfile from "./component/recruiter/Profile";
 import MessagePopup from "./lib/MessagePopup";
+import PublicProfile from "./component/PublicProfile";
 import isAuth, { userType } from "./lib/isAuth";
+import JobProfile from "./component/JobProfile";
 
 const useStyles = makeStyles((theme) => ({
   body: {
@@ -50,7 +52,10 @@ function App() {
           <Grid item className={classes.body}>
             <Switch>
               <Route exact path="/">
-                <Welcome />
+                <Home />
+              </Route>
+              <Route exact path="/search/:keyword">
+                <Home />
               </Route>
               <Route exact path="/login">
                 <Login />
@@ -61,11 +66,17 @@ function App() {
               <Route exact path="/logout">
                 <Logout />
               </Route>
-              <Route exact path="/home">
+              {/* <Route exact path="/home">
                 <Home />
-              </Route>
+              </Route> */}
               <Route exact path="/applications">
                 <Applications />
+              </Route>
+              <Route exact path="/profile/:profileId">
+                <PublicProfile />
+              </Route>
+              <Route exact path="/job/:jobId">
+                <JobProfile />
               </Route>
               <Route exact path="/profile">
                 {userType() === "recruiter" ? (

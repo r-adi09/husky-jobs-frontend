@@ -13,6 +13,8 @@ import ChipInput from "material-ui-chip-input";
 import FileUploadInput from "../lib/FileUploadInput";
 import DescriptionIcon from "@material-ui/icons/Description";
 import FaceIcon from "@material-ui/icons/Face";
+import isAuth from "../lib/isAuth";
+import { Redirect } from "react-router-dom";
 
 import { SetPopupContext } from "../App";
 
@@ -108,6 +110,7 @@ const Profile = (props) => {
   const setPopup = useContext(SetPopupContext);
   const [userData, setUserData] = useState();
   const [open, setOpen] = useState(false);
+  const [loggedin, setLoggedin] = useState(isAuth());
 
   const [profileDetails, setProfileDetails] = useState({
     name: "",
@@ -214,7 +217,9 @@ const Profile = (props) => {
     setOpen(false);
   };
 
-  return (
+  return !loggedin ? (
+    <Redirect to="/login" />
+  ) : (
     <>
       <Grid
         container

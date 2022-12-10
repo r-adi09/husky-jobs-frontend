@@ -50,6 +50,12 @@ const useStyles = makeStyles((theme) => ({
       cursor: "pointer",
     },
   },
+  jobTileOuterAdmin: {
+    padding: "30px",
+    margin: "20px 0",
+    boxSizing: "border-box",
+    width: "100%",
+  },
   popupDialog: {
     height: "100%",
     display: "flex",
@@ -187,6 +193,9 @@ const JobTile = (props) => {
             style={{ width: "100%", marginBottom: "30px" }}
             variant="outlined"
             value={sop}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
             onChange={(event) => {
               if (
                 event.target.value.split(" ").filter(function (n) {
@@ -201,12 +210,96 @@ const JobTile = (props) => {
             variant="contained"
             color="primary"
             style={{ padding: "10px 50px" }}
-            onClick={() => handleApply()}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleApply();
+            }}
           >
             Submit
           </Button>
         </Paper>
       </Modal>
+    </Paper>
+  );
+};
+
+const JobTileAdmin = (props) => {
+  const classes = useStyles();
+  const { job } = props;
+  const history = useHistory();
+  const [isBlocked, setIsBlocked] = useState();
+  const setPopup = useContext(SetPopupContext);
+
+  const blockJob = (jobToBlock) => {
+    axios
+      .put(
+        `${apiList.jobs}/block/${job._id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      )
+      .then((response) => {
+        setPopup({
+          open: true,
+          severity: "success",
+          message: response.data.message,
+        });
+        setIsBlocked(true);
+      })
+      .catch((err) => {
+        console.log(err.response);
+        setPopup({
+          open: true,
+          severity: "error",
+          message: err.response.data.message,
+        });
+      });
+  };
+
+  return (
+    <Paper className={classes.jobTileOuterAdmin} elevation={3}>
+      <Grid container>
+        <Grid container item xs={9} spacing={1} direction="column">
+          <Grid item>
+            <Typography variant="h5">{job.title}</Typography>
+          </Grid>
+          <Grid item>
+            <Rating value={job.rating !== -1 ? job.rating : null} readOnly />
+          </Grid>
+          <Grid item>Role : {job.jobType}</Grid>
+          <Grid item>Salary : &#8377; {job.salary} per month</Grid>
+          <Grid item>
+            Duration :{" "}
+            {job.duration !== 0 ? `${job.duration} month` : `Flexible`}
+          </Grid>
+          <Grid item>
+            Posted By : {job.recruiter ? job.recruiter.name : "Anonymous"}
+          </Grid>
+
+          <Grid item>
+            {job.skillsets.map((skill) => (
+              <Chip label={skill} style={{ marginRight: "2px" }} />
+            ))}
+          </Grid>
+        </Grid>
+        <Grid item xs={3}>
+          <Button
+            variant="contained"
+            color="primary"
+            className={classes.button}
+            onClick={(e) => {
+              e.stopPropagation();
+              blockJob(job);
+            }}
+            disabled={isBlocked}
+          >
+            Block Job
+          </Button>
+        </Grid>
+      </Grid>
     </Paper>
   );
 };
@@ -575,8 +668,39 @@ const Home = (props) => {
 
   const setPopup = useContext(SetPopupContext);
   useEffect(() => {
-    getData();
+    if (userType() === "admin") {
+      getAdminData();
+    } else {
+      getData();
+    }
   }, []);
+
+  const getAdminData = () => {
+    let address = apiList.jobs;
+    axios
+      .get(address, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((response) => {
+        setJobs(
+          response.data.filter((obj) => {
+            const today = new Date();
+            const deadline = new Date(obj.deadline);
+            return deadline > today;
+          })
+        );
+      })
+      .catch((err) => {
+        console.log(err.response.data);
+        setPopup({
+          open: true,
+          severity: "error",
+          message: "Error",
+        });
+      });
+  };
 
   const getData = () => {
     let searchParams = [];
@@ -653,7 +777,45 @@ const Home = (props) => {
       });
   };
 
-  return (
+  return userType() === "admin" ? (
+    <>
+      <Grid
+        container
+        item
+        direction="column"
+        alignItems="center"
+        style={{ padding: "30px", minHeight: "93vh" }}
+      >
+        <Grid
+          item
+          container
+          direction="column"
+          justify="center"
+          alignItems="center"
+        >
+          <Typography variant="h2">Admin</Typography>
+        </Grid>
+        <Grid
+          container
+          item
+          xs
+          direction="column"
+          alignItems="stretch"
+          justify="center"
+        >
+          {jobs.length > 0 ? (
+            jobs.map((job) => {
+              return <JobTileAdmin key={job._id} job={job} />;
+            })
+          ) : (
+            <Typography variant="h5" style={{ textAlign: "center" }}>
+              No jobs found
+            </Typography>
+          )}
+        </Grid>
+      </Grid>
+    </>
+  ) : (
     <>
       <Grid
         container

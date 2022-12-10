@@ -37,7 +37,13 @@ const Navbar = (props) => {
           Job Portal
         </Typography>
         {isAuth() ? (
-          userType() === "recruiter" ? (
+          userType() === "admin" ? (
+            <>
+              <Button color="inherit" onClick={() => handleClick("/logout")}>
+                Logout
+              </Button>
+            </>
+          ) : userType() === "recruiter" ? (
             <>
               <Button color="inherit" onClick={() => handleClick("/home")}>
                 Home
